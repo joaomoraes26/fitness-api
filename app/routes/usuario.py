@@ -4,7 +4,8 @@ from app.database import get_db
 from app.models.usuario import Usuario
 from app.schemas.usuario import UsuarioCreate, UsuarioResponse, UsuarioLogin
 from app.schemas.token import TokenResponse
-from app.auth import hash_senha, verificar_senha , criar_token
+from app.auth import hash_senha, verificar_senha, criar_token, usuario_atual
+from fastapi.security import OAuth2PasswordBearer
 
 
 router = APIRouter()
@@ -32,4 +33,9 @@ def login(dados: UsuarioLogin, db: Session = Depends(get_db)):
 
     token = criar_token({"sub": str(usuario_encontrado.id)})
     return TokenResponse(access_token=token, token_type="bearer")
+
+@router.get("/usuarios/me", response_model = UsuarioResponse)
+def obter_perfil( db: Session = Depends(get_db), usuario_id: str = Depends(usuario_atual)):
+    usuario_encontrado = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    return usuario_encontrado
 
