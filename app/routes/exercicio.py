@@ -50,7 +50,7 @@ def editar_exercicio(exercicio_editado: ExercicioCreate, exercicio_id: int, db: 
 @router.delete("/exercicios/{exercicio_id}")
 def deletar_exercicio(exercicio_id: int, db: Session = Depends(get_db), usuario_id:str = Depends(usuario_atual)):
      deleta_exercicio = db.query(Exercicio).filter(Exercicio.id == exercicio_id, Exercicio.usuario_id == usuario_id).first()
-     if deleta_exercicio is None:
+     if buscar_exercicio is None:
           raise HTTPException(status_code=404, detail="Exercicio não encontrado")
 
      db.delete(deleta_exercicio)
