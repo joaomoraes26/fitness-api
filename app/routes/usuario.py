@@ -34,6 +34,7 @@ def login(dados: UsuarioLogin, db: Session = Depends(get_db)):
     token = criar_token({"sub": str(usuario_encontrado.id)})
     return TokenResponse(access_token=token, token_type="bearer")
 
+
 @router.get("/usuarios/me", response_model = UsuarioResponse)
 def obter_perfil( db: Session = Depends(get_db), usuario_id: str = Depends(usuario_atual)):
     usuario_encontrado = db.query(Usuario).filter(Usuario.id == usuario_id).first()
