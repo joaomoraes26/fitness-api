@@ -35,3 +35,17 @@ def listar_treino_exercicios(treino_id : int, db : Session = Depends(get_db), us
     lista_treino_exercicios = db.query(Exercicio).join(Treino_Exercicio, Treino_Exercicio.exercicio_id == Exercicio.id).filter(Treino_Exercicio.treino_id == treino_id).all()
 
     return lista_treino_exercicios
+
+@router.delete("/treinos/{treino_id}/exercicios/{exercicio_id}")
+def desassociar_exercicio(treino_id : int, exercicio_id : int, db : Session = Depends(get_db), usuario_id : str = Depends(usuario_atual)):
+    treino_encontrado = db.query(Treino).filter(Treino.id == treino_id, Treino.usuario_id == usuario_id).first()
+    if treino_encontrado is None:
+        raise HTTPException(status_code=404, detail="Treino não encontrado")
+    desassocia_exercicio = db.query(Treino_Exercicio).filter(Treino_Exercicio.treino_id == treino_id, Treino_Exercicio.exercicio_id == exercicio_id).first()
+    if desassocia_exercicio is None : 
+        raise HTTPException(status_code=404, detail= "Associação não encontrada")
+
+    db.delete(desassocia_exercicio)
+    db.commit()
+
+    return{"detail" : "Exercicio desassociado com sucesso"}
