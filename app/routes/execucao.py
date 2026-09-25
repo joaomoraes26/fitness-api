@@ -66,3 +66,14 @@ def editar_execucao(execucao_editada : ExecucaoCreate, execucao_id : int, db:Ses
     db.refresh(edita_execucao)
     
     return edita_execucao
+
+@router.delete("/execucoes/{execucao_id}")
+def deletar_execucao (execucao_id: int, db : Session = Depends(get_db), usuario_id : str = Depends(usuario_atual)):
+    deleta_execucao = db.query(Execucao).filter(Execucao.id == execucao_id, Execucao.usuario_id == usuario_id).first()
+    if deleta_execucao is None:
+        raise HTTPException(status_code=404, detail=" Execucão não encontrada")
+
+    db.delete(deleta_execucao)
+    db.commit()
+
+    return {"detail" : "Execucao deletada com sucesso"}
