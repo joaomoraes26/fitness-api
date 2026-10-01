@@ -5,6 +5,7 @@ from datetime import date
 from app.database import get_db
 from app.models.avaliacao import Avaliacao
 from app.schemas.avaliacao import AvaliacaoCreate, AvaliacaoResponse
+from typing import List
 
 router = APIRouter()
 
@@ -14,7 +15,7 @@ def criar_avaliacao (avaliacao : AvaliacaoCreate, db : Session = Depends(get_db)
     if imc_calculado < 18.5:
         recomendacao =  "Abaixo do Peso!"
     elif imc_calculado < 25: 
-        recomendacao = " Peso dentro do esperado!"
+        recomendacao = " Peso saudável!"
     else : 
         recomendacao = "Acima do peso"
     data_hoje = date.today()
@@ -25,3 +26,41 @@ def criar_avaliacao (avaliacao : AvaliacaoCreate, db : Session = Depends(get_db)
     db.refresh(cria_avalicao)
 
     return cria_avalicao
+
+@router.get("/avaliacoes", response_model= List[AvaliacaoResponse])
+def listar_avaliacao(db : Session = Depends(get_db), usuario_id : str = Depends(usuario_atual)):
+    lista_avaliacao = db.query(Avaliacao).filter(Avaliacao.usuario_id == usuario_id).all()
+    return lista_avaliacao 
+
+@router.get("/avaliacoes/{avaliacao_id}", response_model= AvaliacaoResponse)
+def buscar_avaliacao(avaliacao_id : int, db : Session = Depends(get_db), usuario_id : str = Depends(usuario_atual)):
+    busca_avaliacao = db.query(Avaliacao).filter(Avaliacao.id == avaliacao_id, Avaliacao.usuario_id == usuario_id).first()
+    if busca_avaliacao is None:
+        raise HTTPException (status_code=404, detail= "Avaliação não encontrada!")
+    return busca_avaliacao
+
+@router.put("/avaliacoes/{avaliacao_id}" , response_model = AvaliacaoResponse)
+def editar_avaliacao(avaliacao_editada : AvaliacaoCreate, avaliacao_id : int, db : Session = Depends(get_db), usuario_id : str = Depends(usuario_atual)):
+    busca_avaliacao = db.query(Avaliacao).filter(Avaliacao.id == avaliacao_id, Avaliacao.usuario_id == usuario_id).first()
+    if busca_avaliacao is None:
+        raise HTTPException (status_code=404, detail="Avaliação não encontrada!")
+    imc_recalculado = avaliacao_editada.peso/ (avaliacao_editada.altura ** 2)
+    if imc_recalculado < 18.5:
+        recomendacao_nova = " Abaixo do Peso! "
+    elif imc_recalculado < 25:
+        recomendacao_nova = " Peso saudável! "
+    else :
+        recomendacao_nova = " Acima do Peso !"
+    busca_avaliacao.altura = avaliacao_editada.altura
+    busca_avaliacao.peso = avaliacao_editada.peso
+    busca_avaliacao.imc = imc_recalculado 
+    busca_avaliacao.recomendacao_texto = recomendacao_nova
+    busca_avaliacao.objetivo = avaliacao_editada.objetivo
+    busca_avaliacao.data = date.today()
+
+    db.add(busca_avaliacao)
+    db.commit()
+    db.refresh(busca_avaliacao)
+
+    return busca_avaliacao
+
