@@ -64,3 +64,13 @@ def editar_avaliacao(avaliacao_editada : AvaliacaoCreate, avaliacao_id : int, db
 
     return busca_avaliacao
 
+@router.delete("/avaliacoes/{avaliacao_id}")
+def deletar_avaliacao(avaliacao_id : int, db: Session = Depends(get_db), usuario_id : str = Depends(usuario_atual)):
+    deleta_avaliacao = db.query(Avaliacao).filter(Avaliacao.id == avaliacao_id, Avaliacao.usuario_id == usuario_id).first()
+    if deleta_avaliacao is None:
+        raise HTTPException (status_code= 404, detail="Avaliação não encontrada")
+
+    db.delete(deleta_avaliacao)
+    db.commit()
+
+    return {"detail" : " Avaliação deletada com sucesso "}
