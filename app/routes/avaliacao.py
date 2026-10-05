@@ -6,18 +6,14 @@ from app.database import get_db
 from app.models.avaliacao import Avaliacao
 from app.schemas.avaliacao import AvaliacaoCreate, AvaliacaoResponse
 from typing import List
+from app.recomendacao import gerar_recomendacao
 
 router = APIRouter()
 
 @router.post("/avaliacoes" , response_model= AvaliacaoResponse)
 def criar_avaliacao (avaliacao : AvaliacaoCreate, db : Session = Depends(get_db), usuario_id : str = Depends(usuario_atual)):
     imc_calculado = avaliacao.peso/ (avaliacao.altura ** 2) 
-    if imc_calculado < 18.5:
-        recomendacao =  "Abaixo do Peso!"
-    elif imc_calculado < 25: 
-        recomendacao = " Peso saudável!"
-    else : 
-        recomendacao = "Acima do peso"
+    recomendacao = gerar_recomendacao(imc_calculado, avaliacao.objetivo)
     data_hoje = date.today()
     cria_avalicao = Avaliacao(peso = avaliacao.peso, altura = avaliacao.altura, objetivo = avaliacao.objetivo, imc = imc_calculado, recomendacao_texto = recomendacao, usuario_id = usuario_id, data = data_hoje)
 
@@ -45,12 +41,7 @@ def editar_avaliacao(avaliacao_editada : AvaliacaoCreate, avaliacao_id : int, db
     if busca_avaliacao is None:
         raise HTTPException (status_code=404, detail="Avaliação não encontrada!")
     imc_recalculado = avaliacao_editada.peso/ (avaliacao_editada.altura ** 2)
-    if imc_recalculado < 18.5:
-        recomendacao_nova = " Abaixo do Peso! "
-    elif imc_recalculado < 25:
-        recomendacao_nova = " Peso saudável! "
-    else :
-        recomendacao_nova = " Acima do Peso !"
+    recomendacao_nova = gerar_recomendacao(imc_recalculado, avaliacao_editada.objetivo)
     busca_avaliacao.altura = avaliacao_editada.altura
     busca_avaliacao.peso = avaliacao_editada.peso
     busca_avaliacao.imc = imc_recalculado 
@@ -74,3 +65,4 @@ def deletar_avaliacao(avaliacao_id : int, db: Session = Depends(get_db), usuario
     db.commit()
 
     return {"detail" : " Avaliação deletada com sucesso "}
+
