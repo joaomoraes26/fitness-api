@@ -29,21 +29,14 @@ API para registrar e acompanhar treinos, exercícios, refeições e avaliações
 
 ## ▶️ Como rodar
 1. Clone o repositório e entre na pasta do projeto
-2. Crie e ative o ambiente virtual:
-    python -m venv venv
-    venv\Scripts\activate
-
-3. Instale as dependências:
-pip install -r requirements.txt
-
-4. Copie o arquivo `.env.example` para `.env` e preencha a `SECRET_KEY`
-
-5. Inicie o servidor:
-uvicorn app.main:app --reload
-
-6. Acesse a documentação das rotas em `http://localhost:8000/docs`
+2. Crie o ambiente virtual: `python -m venv venv`
+3. Ative o ambiente virtual: `venv\Scripts\activate`
+4. Instale as dependências: `pip install -r requirements.txt`
+5. Copie o arquivo `.env.example` para `.env` e preencha a `SECRET_KEY`
+6. Inicie o servidor: `uvicorn app.main:app --reload`
+7. Acesse a documentação das rotas em `http://localhost:8000/docs`
 
 ## 📚 O que aprendi
-- (escreva aqui)
-- (escreva aqui)
-- (escreva aqui)
+- Guardar dados sensíveis, como a chave secreta, em variáveis de ambiente (`.env`), fora do código
+- Criar rotas e CRUDs completos com FastAPI, validando os dados de entrada com Pydantic
+- Autenticar usuários com JWT e proteger as rotas para que cada pessoa acesse apenas os próprios dados
