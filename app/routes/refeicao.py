@@ -5,12 +5,25 @@ from app.database import get_db
 from app.models.refeicao import Refeicao 
 from app.schemas.refeicao import RefeicaoCreate, RefeicaoResponse
 from typing import List
+from app.ia.nutricao import estimar_macros
+from app.ia.client import IAIndisponivelError
+
 
 router = APIRouter()
 
 @router.post("/refeicoes", response_model= RefeicaoResponse)
 def criar_refeicao (refeicao : RefeicaoCreate, db : Session = Depends(get_db), usuario_id : str = Depends(usuario_atual)):
+    try:
+        macros = estimar_macros(refeicao.descricao_original)
+    except IAIndisponivelError:
+        macros = None
     cria_refeicao = Refeicao(tipo_refeicao = refeicao.tipo_refeicao, descricao_original = refeicao.descricao_original, data = refeicao.data, usuario_id = usuario_id)
+    
+    if macros is not None:
+       cria_refeicao.calorias = macros.calorias
+       cria_refeicao.proteina = macros.proteina
+       cria_refeicao.carboidrato = macros.carboidrato
+       cria_refeicao.gordura = macros.gordura
 
     db.add(cria_refeicao)
     db.commit()
